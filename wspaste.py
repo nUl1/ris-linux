@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # WireShark Paste Utility to copy whole packet bytes as Hex Stream
@@ -19,17 +19,15 @@ from sys import stdin, argv, exit as sys_exit
 if __name__ == '__main__':
 
     if len(argv) != 2:
-        print 'Usage: %s destfile'
+        print(f'Usage: {argv[0]} destfile')
         sys_exit(1)
 
     data = stdin.read().strip()[0x2a*2:]
 
     if len(data) % 2:
-        print 'Bad input data'
+        print('Bad input data')
         sys_exit(1)
 
     fd = open(argv[1], 'wb')
-    for i in range(0, len(data), 2):
-        fd.write(chr(eval('0x' + data[i] + data[i+1])))
-
+    fd.write(bytes.fromhex(data))
     fd.close()

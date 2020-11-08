@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # Inf Driver parser
@@ -19,15 +19,10 @@ from codecs import utf_16_le_decode, BOM_LE, BOM_BE
 from sys import argv, exit as sys_exit
 from os.path import isfile
 from glob import glob
-from cPickle import dump
+from pickle import dump
 from traceback import format_exc
 
 __version__ = '1.0'
-
-### Compatibility with python 2.1
-if getattr(__builtins__, 'True', None) is None:
-    True=1
-    False=0
 
 class_guids = ['{4d36e972-e325-11ce-bfc1-08002be10318}']
 classes = ['net']
@@ -50,16 +45,16 @@ def csv2list(value):
     return values
 
 def str_lookup(dc, c_key):
-    for key in dc.keys():
+    for key, value in dc.items():
         if key.lower() == c_key.lower():
-            if len(dc[key])>0:
-                return dc[key].pop()
+            if value:
+                return value.pop()
     return 'NoDesc'
 
 def item_lookup(dc, c_key):
-    for key in dc.keys():
+    for key, value in dc.items():
         if key.lower() == c_key.lower():
-            return dc[key]
+            return value
     return None
 
 def fuzzy_lookup(strlist, pattern, ends=None):
@@ -91,15 +86,15 @@ def parse_line(sections, secname, lineno, line):
         if comma == -1:
             comma = equal+1
 
-    if debug > 2: print '[%d] [%s] equal = %d - comma = %d' % (lineno, secname, equal, comma)
+    if debug > 2: print(f'[{lineno}] [{secname}] equal = {equal} - comma = {comma}')
 
     if len(line) + equal + comma == -1:
-        if debug: print '[%d] [%s] Invalid line' % (lineno, secname)
+        if debug: print(f'[{lineno}] [{secname}] Invalid line')
         return True
 
     ### Values
     if equal < comma:
-        if type(sections[secname]) != type({}):
+        if not isinstance(sections[secname], dict):
             sections[secname] = {}
         section = sections[secname]
         key, value = line.split('=', 1)
@@ -108,7 +103,7 @@ def parse_line(sections, secname, lineno, line):
         ### SkipList
         if key == '0':return True
 
-        if section.has_key(key):
+        if key in section:
             values = csv2list(value)
             ### SkipList
             if (len(values) < 2) or (value.find('VEN_') == -1) or (value.find('DEV_') == -1):
@@ -116,8 +111,8 @@ def parse_line(sections, secname, lineno, line):
             oldkey = key
             key = key + '_dev_' + values[1]
 
-            if debug > 1: print '[%d] [%s] Duplicate key %s will be renamed to %s' % \
-               (lineno, secname, oldkey, key)
+            if debug > 1:
+                print(f'[{lineno}] [{secname}] Duplicate key {oldkey} will be renamed to {key}')
 
         if secname == 'manufacturer':
             mlist = value.strip().split(',')
@@ -130,17 +125,17 @@ def parse_line(sections, secname, lineno, line):
             else:
                 mlist = [mf]
 
-            if debug > 0: print 'Preprocessing Manifacturers:', ', '.join(mlist)
+            if debug > 0: print('Preprocessing Manifacturers:', ', '.join(mlist))
             section[key] = mlist
-            if debug > 0: print 'Manifacturer %s=%s' % (key, section[key])
+            if debug > 0: print(f'Manifacturer {key}={section[key]}')
             return True
 
         section[key] = csv2list(value)
-        if debug > 1: print '[K] [%d] [%s] %s=%s' % (lineno, secname, key, section[key])
+        if debug > 1: print(f'[K] [{lineno}] [{secname}] {key}={section[key]}')
         return True
 
     values = csv2list(line)
-    if debug > 1: print '[V] [%d] [%s] Values = %s' % (lineno, secname, ','.join(values))
+    if debug > 1: print(f'[V] [{lineno}] [{secname}] Values = {",".join(values)}')
     sections[secname] = values
     return True
 
@@ -173,7 +168,7 @@ def parse_inf(filename):
 
         ## We only need network drivers
         if name == 'version' and skip_inf(line):
-            if debug > 0: print 'Skipped %s not a network inf' % filename
+            if debug > 0: print(f'Skipped {filename} not a network inf')
             return None
 
         ## Section start
@@ -188,23 +183,21 @@ def parse_inf(filename):
     return sections
 
 def scan_inf(filename):
-    if debug > 0: print 'Parsing ', filename
+    if debug > 0: print('Parsing ', filename)
     inf = parse_inf(filename)
     if inf is None: return {}
 
     devices = {}
-    if inf and inf.has_key('manufacturer'):
-        devlist = []
-        for sections in inf['manufacturer'].values():
-            devlist = devlist + sections
-        if debug > 0: print 'Devlist:', ', '.join(devlist)
+    if inf and 'manufacturer' in inf:
+        devlist = list(inf['manufacturer'].values())
+        if debug > 0: print('Devlist:', ', '.join(devlist))
         for devmap in devlist:
             devmap_k = unquote(devmap.lower())
-            if not inf.has_key(devmap_k):
-                if debug > 0: print 'Warning: missing [%s] driver section in %s, ignored' % (devmap, filename)
+            if devmap_k not in inf:
+                if debug > 0: print(f'Warning: missing [{devmap}] driver section in {filename}, ignored')
                 continue
             devmap = devmap_k
-            for dev in inf[devmap].keys():
+            for dev in inf[devmap]:
                 if dev.find('%') == -1: continue # bad infs
 
                 device = dev.split('%')[1]
@@ -216,56 +209,56 @@ def scan_inf(filename):
 
                 hid = hid.upper()
 
-                if inf.has_key(sec):
+                if sec in inf:
                     mainsec = sec
                 else:
                     mainsec = fuzzy_lookup(inf.keys(), sec)
                     if mainsec is None: continue
 
-                if mainsec.endswith('.services') and inf.has_key(mainsec):
+                if mainsec.endswith('.services') and mainsec in inf:
                     serv_sec = mainsec
-                elif inf.has_key(mainsec + '.services'):
+                elif mainsec + '.services' in inf:
                     serv_sec = mainsec + '.services'
                 else:
                     serv_sec = fuzzy_lookup(inf.keys(), mainsec.split('.')[0], '.services')
                     if serv_sec is None:
-                        if debug > 0: print 'Service section for %s not found, skipping...' % mainsec
+                        if debug > 0: print(f'Service section for {mainsec} not found, skipping...')
                         continue
 
-                if devices.has_key(hid): continue # Multiple sections define same devices
+                if hid in devices: continue # Multiple sections define same devices
 
-                if dumpdev: print 'Desc:', desc
-                if dumpdev: print 'hid:', hid
+                if dumpdev: print('Desc:', desc)
+                if dumpdev: print('hid:', hid)
 
                 tmp = item_lookup(inf[serv_sec], 'addservice')
                 if tmp is None:
-                    if debug > 0: print 'Warning: addservice not found %s' % serv_sec
+                    if debug > 0: print(f'Warning: addservice not found {serv_sec}')
                     continue
                 service = tmp[0]
                 sec_service = tmp[2]
 
                 driver = None
                 if (type(inf[mainsec]) == type({})
-                    and inf[mainsec].has_key('copyfiles')):
+                    and 'copyfiles' in inf[mainsec]):
                     sec_files = inf[mainsec]['copyfiles'][0].lower()
                     if type(inf[sec_files]) == type([]):
                         driver = inf[sec_files][0]
 
                 if driver is None:
-                    if not inf.has_key(sec_service.lower()):
-                        print 'Warning missing ServiceBinary for %s' % sec_service
-                        print 'Please report including this file: %s\n' % filename
+                    if sec_service.lower() not in inf:
+                        print(f'Warning missing ServiceBinary for {sec_service}')
+                        #print(f'Please report including this file: {filename}\n')
                         continue
                     driver = inf[sec_service.lower()]['ServiceBinary'][0].split('\\').pop()
 
-                if dumpdev: print 'Driver', driver
+                if dumpdev: print('Driver', driver)
 
                 try:
                     char = eval(inf[mainsec]['Characteristics'][0])
                 except:
                     char = 132
 
-                if dumpdev: print 'Characteristics', char
+                if dumpdev: print('Characteristics', char)
                 try:
                     btype = int(inf[mainsec]['BusType'][0])
                 except:
@@ -274,9 +267,9 @@ def scan_inf(filename):
                     except:
                         btype = 0
 
-                if dumpdev: print 'BusType', btype
-                if dumpdev: print 'Service', service
-                if dumpdev: print '-'*78
+                if dumpdev: print('BusType', btype)
+                if dumpdev: print('Service', service)
+                if dumpdev: print('-'*78)
 
 
                 devices[hid] = { 'desc' : desc,
@@ -290,7 +283,7 @@ def scan_inf(filename):
 
 if __name__ == '__main__':
     if len(argv) != 2:
-        print 'Usage %s: directory_with_infs or inf file' % argv[0]
+        print(f'Usage {argv[0]}: directory_with_infs or inf file')
         sys_exit(-1)
 
     if isfile(argv[1]):
@@ -304,36 +297,34 @@ if __name__ == '__main__':
             try:
                 devlist.update(scan_inf(inffile))
             except:
-                print '--'
-                print 'Error parsing %s' % inffile
-                print 'Please report sending the inf file and this message:'
-                print '---- CUT HERE ----'
-                print '%s Version %s\n' % (argv[0], __version__)
-                print format_exc()
-                print '---- CUT HERE ----'
+                print('--')
+                print('Error parsing', inffile)
+                #print('Please report sending the inf file and this message:')
+                print('---- CUT HERE ----')
+                print(f'{argv[0]} Version {__version__}\n')
+                print(format_exc())
+                print('---- CUT HERE ----')
 
-    print 'Compiled %d drivers' % len(devlist)
+    print(f'Compiled {len(devlist)} drivers')
 
     fd = open('devlist.cache', 'wb')
     dump(devlist, fd)
     fd.close()
-    print 'generated devlist.cache'
+    print('generated devlist.cache')
 
     fd = open('nics.txt', 'w')
     drvhash = {}
-    for nic in devlist.items():
-        entry = nic[0].split('&')
+    for nic, desc in devlist.items():
+        entry = nic.split('&')
         if len(entry) < 2: continue # just to be sure
         if not entry[0].startswith('PCI'): continue # skip usb
         vid = entry[0].split('VEN_').pop().lower()
         pid = entry[1].split('DEV_').pop().lower()
         key = (vid, pid)
-        line = '%4s %4s %s %s\n' % (vid, pid, nic[1]['drv'], nic[1]['svc'])
+        line = f'{vid:4} {pid:4} {desc["drv"]} {desc["svc"]}\n'
         drvhash[key] = line
 
-    drvlist = drvhash.values()
-    drvlist.sort()
-    fd.writelines(drvlist)
+    fd.writelines(sorted(drvhash.values()))
     fd.close()
 
-    print 'generated nics.txt'
+    print('generated nics.txt')

@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # Boot Information Negotiation Layer Packet decoder
@@ -20,28 +20,28 @@ from binlsrv import C, S, MAGIC_COOKIE, MAGIC_OFFSET, hexdump
 
 if __name__ == '__main__':
     if len(argv) < 2:
-        print 'Usage: decode.py hexdump1 [hexdump2] [..]'
+        print('Usage: decode.py hexdump1 [hexdump2] [..]')
         sys_exit()
 
     for f in argv[1:]:
         data = open(f, 'rb').read()
 
-        if (data[0] == C) or (data[0] == S):
+        if (data[0] == C[0]) or (data[0] == S[0]):
             t = data[1:4].lower()
             data = data[8:]
         elif data[MAGIC_OFFSET:MAGIC_OFFSET+4] == MAGIC_COOKIE:
-            t = 'bootp'
+            t = b'bootp'
         else:
-            print 'Invalid Packet'
+            print('Invalid Packet')
             hexdump(data[0xee:])
             continue
 
         try:
-            decode = getattr(__import__('binlsrv', globals(), locals(), []), 'decode_' + t)
+            decode = getattr(__import__('binlsrv', globals(), locals(), []), 'decode_' + t.decode())
         except:
-            print 'Type', repr(t), 'not supported'
+            print('Type', t, 'not supported')
             hexdump(data)
             continue
 
-        print '\nDumping file:', f
+        print('\nDumping file:', f)
         decode('['+ t.upper() +']', data)

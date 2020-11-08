@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # Inf Cache dumper
@@ -16,19 +16,17 @@
 # ======================================================================
 
 from sys import argv, exit as sys_exit
-from cPickle import load
+from pickle import load
 
 __version__ = '0.1'
 
 if __name__ == '__main__':
     if len(argv) != 2:
-        print 'Usage: %s devlist.cache' % argv[0]
+        print(f'Usage: {argv[0]} devlist.cache')
         sys_exit(-1)
 
     data = load(open(argv[1], 'rb'))
-    keys = data.keys()
-    keys.sort()
-    for k in keys:
+    for k in sorted(data.keys()):
         if not k.startswith('PCI'): continue
-        print '%s: %s' % (k, data[k]['inf'].lower())
-        #print '%s: %s' % (k, data[k])
+        print(f'{k}: {data[k]["inf"].lower()}')
+        #print(f'{k}: {data[k]}')

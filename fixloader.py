@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # Fix for setuploader
@@ -19,20 +19,20 @@ from sys import argv, exit as sys_exit
 
 if __name__ == '__main__':
     if len(argv) < 2:
-        print 'Usage: fixloader.py ntldr'
+        print('Usage: fixloader.py ntldr')
         sys_exit()
 
     data = open(argv[1], 'rb').read()
 
-    if data.find('setupldr.exe')==-1:
-        print 'Wrong file'
+    if data.find(b'setupldr.exe')==-1:
+        print('Wrong file')
         sys_exit()
 
-    if data[:2] == 'MZ':
-        print 'Loader already fixed'
+    if data[:2] == b'MZ':
+        print('Loader already fixed')
         sys_exit()
 
-    data = 'MZ' + data.split('MZ', 1).pop()
+    data = b'MZ' + data.split(b'MZ', 1).pop()
 
     open(argv[1], 'wb').write(data)
-    print 'Loader fixed'
+    print('Loader fixed')

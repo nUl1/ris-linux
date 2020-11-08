@@ -1,4 +1,4 @@
-#!/usr/bin/env python
+#!/usr/bin/env python3
 # -*- Mode: Python; tab-width: 4 -*-
 #
 # Boot Information Negotiation Layer Packet Dumper
@@ -20,10 +20,10 @@ from binlsrv import hexdump
 
 if __name__ == '__main__':
     if len(argv) < 2:
-        print 'Usage: hexdump.py hexdump1 [hexdump2] [..]'
+        print('Usage: hexdump.py hexdump1 [hexdump2] [..]')
         sys_exit()
 
     for f in argv[1:]:
         data = open(f, 'rb').read()
-        print '\nDumping file:', f
+        print('\nDumping file:', f)
         hexdump(data)
