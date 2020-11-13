@@ -737,7 +737,7 @@ def decode_ncr(p, data):
     print(p, f'Result code: {result:#x}')
     data = data[4:] # 0x0 = OK
 
-    print(p, f'type: {unpack("<I", data[:4]):#x}')
+    print(p, f'type: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x2 - fixed (type?)
 
     b_off = unpack('<I', data[:4])[0]
@@ -837,10 +837,10 @@ def send_ncq(s, vid, pid, subsys, spath):
     s.send(reply)
 
 def decode_ncq(p, data):
-    #print(p, f'u1: {unpack("<I", data[:4]):#x}')
+    #print(p, f'u1: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # always 0x2
 
-    #print(p, f'u2: {unpack("<I", data[:4]):#x}')
+    #print(p, f'u2: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # always 0x0
 
     # use hex(':') in 3.8
@@ -849,13 +849,13 @@ def decode_ncq(p, data):
 
     data = data[2:] # Padding
 
-    #print(p, f'u3: {unpack("<I", data[:4]):#x}')
+    #print(p, f'u3: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # always 0x0
 
-    #print(p, f'u4: {unpack("<I", data[:4]):#x}')
+    #print(p, f'u4: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # always 0x0
 
-    #print(p, f'u5: {unpack("<I", data[:4]):#x}')
+    #print(p, f'u5: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # always 0x2
 
     vid = unpack('<H', data[:2])[0]
@@ -871,7 +871,7 @@ def decode_ncq(p, data):
     print(p, f'rev    = {data[3]:#x}')
     data = data[4:]
 
-    print(p, f'rev2   = {unpack("<I", data[:4]):#x}')
+    print(p, f'rev2   = {unpack("<I", data[:4])[0]:#x}')
     data = data[4:]
 
     subsys = unpack('<I', data[:4])[0]
@@ -882,30 +882,30 @@ def decode_ncq(p, data):
     data = data[2:]
 
     data = data[:l]
-    print(p, 'Source path:', data.replace(b'\x00',''))
+    print(p, 'Source path:', data.replace(b'\x00',b''))
     return vid, pid, subsys
 
 
 def decode_req(p, data):
     print(p, 'Decoding REQ:')
 
-    print(p, f'f1: {unpack("<I", data[:4]):#x}')
+    print(p, f'f1: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x1
 
-    print(p, f'f2: {unpack("<I", data[:4]):#x}')
+    print(p, f'f2: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10001
 
-    print(p, f'f3: {unpack("<I", data[:4]):#x}')
+    print(p, f'f3: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10
 
-    print(p, f'f4: {unpack("<I", data[:4]):#x}')
+    print(p, f'f4: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x1
 
 
-    print(p, f'u1: {unpack("<I", data[:4]):#x}')
+    print(p, f'u1: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:]
 
-    print(p, f'u2: {unpack("<I", data[:4]):#x}')
+    print(p, f'u2: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:]
 
     ### end of fixed data
@@ -919,16 +919,16 @@ def send_req(s, addr):
 def decode_rsp(p, data):
     print(p, 'Decoding RSP:')
 
-    print(p, f'u1: {unpack("<I", data[:4]):#x}')
+    print(p, f'u1: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x1
 
-    print(p, f'u2: {unpack("<I", data[:4]):#x}')
+    print(p, f'u2: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10001
 
-    print(p, f'u3: {unpack("<I", data[:4]):#x}')
+    print(p, f'u3: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10
 
-    print(p, f'u4: {unpack("<I", data[:4]):#x}')
+    print(p, f'u4: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x1
 
     ### end of fixed data
@@ -937,25 +937,25 @@ def decode_rsp(p, data):
 def decode_off(p, data):
     print(p, 'Decoding OFF:')
 
-    print(p, f'u1: {unpack("<I", data[:4]):#x}')
+    print(p, f'u1: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x4
 
-    print(p, f'u2: {unpack("<I", data[:4]):#x}')
+    print(p, f'u2: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10001
 
-    print(p, f'u3: {unpack("<I", data[:4]):#x}')
+    print(p, f'u3: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x10
 
-    print(p, f'u4: {unpack("<I", data[:4]):#x}')
+    print(p, f'u4: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x1
 
-    print(p, f'u5: {unpack("<I", data[:4]):#x}')
+    print(p, f'u5: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # Variable
 
-    print(p, f'u6: {unpack("<I", data[:4]):#x}')
+    print(p, f'u6: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # Variable
 
-    print(p, f'u7: {unpack("<I", data[:4]):#x}')
+    print(p, f'u7: {unpack("<I", data[:4])[0]:#x}')
     data = data[4:] # 0x3
 
 def send_rsp(s, addr, data):
