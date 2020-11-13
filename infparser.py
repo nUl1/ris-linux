@@ -144,12 +144,13 @@ def parse_inf(filename):
     name = ''
     sections = {}
     section = None
-    data = open(filename).read()
+    data = open(filename, 'rb').read()
 
     ## Cheap Unicode to ascii
     if data[:2] == BOM_LE or data[:2] == BOM_BE:
         data = utf_16_le_decode(data)[0]
         data = data.encode('ascii', 'ignore')
+    data = data.decode()
 
     ## De-inf fixer ;)
     data = 'Copy'.join(data.split(';Cpy'))
@@ -189,7 +190,7 @@ def scan_inf(filename):
 
     devices = {}
     if inf and 'manufacturer' in inf:
-        devlist = list(inf['manufacturer'].values())
+        devlist = sum(inf['manufacturer'].values(), [])
         if debug > 0: print('Devlist:', ', '.join(devlist))
         for devmap in devlist:
             devmap_k = unquote(devmap.lower())
