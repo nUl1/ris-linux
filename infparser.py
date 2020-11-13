@@ -150,7 +150,7 @@ def parse_inf(filename):
     if data[:2] == BOM_LE or data[:2] == BOM_BE:
         data = utf_16_le_decode(data)[0]
         data = data.encode('ascii', 'ignore')
-    data = data.decode()
+    data = data.decode('ascii', 'ignore')
 
     ## De-inf fixer ;)
     data = 'Copy'.join(data.split(';Cpy'))
